@@ -66,7 +66,6 @@ def obtener_y_mostrar_proceso(proc):
 
 def monitorear_procesos():
     """
-    Función: monitorear_procesos (Función principal, equivalente a 'quickSort(A)')
     Responsabilidad: Contiene el bucle principal, gestiona la limpieza de pantalla y la pausa.
     """
     print("Monitoreo de Procesos (Presione Ctrl+C para salir)\n")
@@ -92,7 +91,7 @@ def monitorear_procesos():
         print("\nMonitoreo detenido.")
 
 
-# Punto de entrada estándar de Python (Convención similar a la llamada principal en el QuickSort)
+# Punto de entrada estándar de Python
 if __name__ == "__main__":
     # Ejecuta la función principal del monitoreo.
     monitorear_procesos()
