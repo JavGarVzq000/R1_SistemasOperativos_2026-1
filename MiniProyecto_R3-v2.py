@@ -63,7 +63,7 @@ def crear_interfaz_principal():
     cpu_label.pack(pady=(5, 2), padx=10, anchor='w')
     
     # Barra de Progreso de CPU (style=progressbar para Tkinter)
-    cpu_bar = ttk.Progressbar(root, orient='horizontal', length=380, mode='determinate')
+    cpu_bar = ttk.Progressbar(root, orient='vertical', length=380, mode='determinate')
     cpu_bar.pack(pady=5, padx=10)
     
     # 3. Creación de Etiquetas y Barras de Progreso (Memoria)
@@ -73,7 +73,7 @@ def crear_interfaz_principal():
     mem_label.pack(pady=(5, 2), padx=10, anchor='w')
     
     # Barra de Progreso de Memoria
-    mem_bar = ttk.Progressbar(root, orient='horizontal', length=380, mode='determinate')
+    mem_bar = ttk.Progressbar(root, orient='vertical', length=380, mode='determinate')
     mem_bar.pack(pady=5, padx=10)
     
     # 4. Iniciar el Monitoreo
