@@ -11,7 +11,7 @@ import time    # Librería para introducir pausas en el script (simular el refre
 # Traduce los estados internos de psutil (que reflejan el SO) a un formato legible
 ESTADOS_SIMULADOS = {
     'running': 'Ejecutándose',              # Proceso usando la CPU activamente.
-    'sleeping': 'Listo (en espera)',        # Estado por defecto cuando el SO lo reporta como "durmiendo".
+    'sleeping': 'Listo (esn espera)',        # Estado por defecto cuando el SO lo reporta como "durmiendo".
     'waiting': 'Bloqueado (esperando I/O)', # Proceso esperando una operación de Entrada/Salida.
     'zombie': 'Zombie (terminado)'          # Proceso terminado, pero que aún tiene una entrada en la tabla de procesos.
     # Nota: El estado 'Listo (en espera)' también se aplicará por lógica de CPU 0.00%
