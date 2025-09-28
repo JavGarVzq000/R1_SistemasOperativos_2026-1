@@ -17,6 +17,7 @@ PID: 1234 | Proceso: chrome.exe   | Estado: Ejecutándose
 PID: 5678 | Proceso: explorer.exe | Estado: Listo
 PID: 9101 | Proceso: spotify.exe  | Estado: Bloqueado (esperando I/O)
 
+```
 ## ¿Por qué Python?
 Python es un lenguaje de programación de alto nivel, interpretado y de código abierto. Destaca 
 de entre otros lenguajes por su sintaxis sencilla y legibilidad. Lenguaje de propósito general,
