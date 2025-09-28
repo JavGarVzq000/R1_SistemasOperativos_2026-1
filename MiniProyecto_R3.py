@@ -1,6 +1,6 @@
 # =========================================================================
 # Monitoreo de Procesos del SO (Usando Python y psutil)
-# Objetivo: Analizar los procesos en ejecución en su computadora real.
+# Modificación: Si uso_cpu es 0.00%, el estado debe ser 'Listo (en espera)'.
 # =========================================================================
 
 # Solicitamos las librerías que necesitamos
@@ -10,51 +10,62 @@ import time    # Librería para introducir pausas en el script (simular el refre
 # 1. Definimos el mapeo de estados como una variable global (o constante)
 # Traduce los estados internos de psutil (que reflejan el SO) a un formato legible
 ESTADOS_SIMULADOS = {
-    'running': 'Ejecutándose',          # Proceso usando la CPU activamente.
-    'sleeping': 'Listo (en espera)',    # Proceso inactivo, esperando un evento o un turno de CPU.
-    'waiting': 'Bloqueado (esperando I/O)', # Proceso esperando una operación de Entrada/Salida (disco, red, etc.).
-    'zombie': 'Zombie (terminado)'      # Proceso terminado, pero que aún tiene una entrada en la tabla de procesos.
+    'running': 'Ejecutándose',              # Proceso usando la CPU activamente.
+    'sleeping': 'Listo (en espera)',        # Estado por defecto cuando el SO lo reporta como "durmiendo".
+    'waiting': 'Bloqueado (esperando I/O)', # Proceso esperando una operación de Entrada/Salida.
+    'zombie': 'Zombie (terminado)'          # Proceso terminado, pero que aún tiene una entrada en la tabla de procesos.
+    # Nota: El estado 'Listo (en espera)' también se aplicará por lógica de CPU 0.00%
 }
 
 
 def obtener_y_mostrar_proceso(proc):
     """
     Función: obtener_y_mostrar_proceso
-    Responsabilidad: Extrae la información detallada de un proceso individual (PID, Nombre, CPU, Memoria, Estado)
-                     y la imprime en el formato requerido. Maneja errores comunes.
-    Parámetros:
-        - proc: Objeto de proceso devuelto por psutil.process_iter().
+    Responsabilidad: Extrae la información detallada de un proceso individual y aplica la nueva lógica de estado.
     """
     try:
         # Intenta obtener la información del proceso. Esto puede fallar si el proceso termina mientras se lee.
         
         # Extracción de campos obligatorios
-        pid = proc.info['pid']          # ID único del proceso.
-        nombre = proc.info['name']      # Nombre del ejecutable asociado al proceso.
+        pid = proc.info['pid']
+        nombre = proc.info['name']
         
         # MANEJO DE USO DE CPU
-        uso_cpu_raw = proc.info['cpu_percent'] # Obtiene el porcentaje de uso de CPU desde la última llamada.
-        # Asigna 0.0 si el valor es None (información no disponible o primer muestreo).
+        uso_cpu_raw = proc.info['cpu_percent']
         uso_cpu = uso_cpu_raw if uso_cpu_raw is not None else 0.0
 
         # MANEJO DE USO DE MEMORIA (en MB)
-        mem_info = proc.info['memory_info'] # Obtiene un objeto con información de memoria.
+        mem_info = proc.info['memory_info']
         if mem_info is not None:
             # Convierte el Resident Set Size (RSS, memoria física usada) de bytes a Megabytes.
             uso_memoria = mem_info.rss / (1024 * 1024)
         else:
-            uso_memoria = 0.0 # Asigna 0.0 si la información de memoria no está disponible.
+            uso_memoria = 0.0
             
-        # Obtener y mapear el estado (Simulación de cambio de contexto)
-        estado_real = proc.status() # Estado actual del proceso en el SO (e.g., 'running', 'sleeping').
-        # Mapea el estado real a la etiqueta legible definida en ESTADOS_SIMULADOS.
-        estado_simulado = ESTADOS_SIMULADOS.get(estado_real, estado_real)
+        # ===============================================================
+        # 4. LÓGICA DE SIMULACIÓN Y ASIGNACIÓN DE ESTADO MODIFICADA
+        # ===============================================================
+        
+        estado_real = proc.status()
+        
+        # Primero, verifica si el proceso ha terminado. Si es zombie, no hay más lógica.
+        if estado_real == 'zombie':
+            estado_simulado = ESTADOS_SIMULADOS['zombie']
+        
+        # Segundo, aplica la regla de correlación: Si el uso de CPU es cero,
+        # implica que el proceso está esperando y se encuentra en el estado 'Listo'
+        elif uso_cpu == 0.0:
+            estado_simulado = 'Listo (En espera)'
+        
+        # Tercero, si no es Zombie y sí está usando CPU, usa el mapeo original.
+        else:
+            # Mapea el estado real del SO (Ejecutándose, Bloqueado, etc.)
+            estado_simulado = ESTADOS_SIMULADOS.get(estado_real, estado_real)
 
         # Mostrar la información formateada
-        # Se utilizan f-strings con formato de alineación (<) y precisión (.2f) para una salida limpia.
         print(f"PID: {pid:<5} | Proceso: {nombre:<25} | CPU: {uso_cpu:<5.2f}% | Memoria: {uso_memoria:.2f} MB | Estado: {estado_simulado}")
 
-    # Manejo de excepciones (Parte crucial del monitoreo en tiempo real)
+    # Manejo de excepciones
     except (psutil.NoSuchProcess, psutil.AccessDenied):
         # Captura errores si un proceso termina o si Python no tiene permisos para leerlo.
         # En estos casos, simplemente omitimos el proceso y continuamos con el siguiente.
@@ -66,6 +77,7 @@ def obtener_y_mostrar_proceso(proc):
 
 def monitorear_procesos():
     """
+    Función: monitorear_procesos (Función principal)
     Responsabilidad: Contiene el bucle principal, gestiona la limpieza de pantalla y la pausa.
     """
     print("Monitoreo de Procesos (Presione Ctrl+C para salir)\n")
@@ -73,8 +85,7 @@ def monitorear_procesos():
     try:
         # Bucle infinito para el monitoreo continuo
         while True:
-            # Limpiamos la pantalla para el efecto de 'actualización en vivo'
-            # Códigos ANSI: \033[H mueve el cursor al inicio; \033[J limpia la pantalla desde el cursor.
+            # Limpiamos la pantalla
             print("\033[H\033[J")
 
             # Iteramos sobre todos los procesos activos
@@ -83,7 +94,7 @@ def monitorear_procesos():
                 # Llamamos a la función de detalle para procesar y mostrar cada proceso.
                 obtener_y_mostrar_proceso(proc)
 
-            # Esperamos 2 segundos antes de la próxima actualización para no sobrecargar el sistema.
+            # Esperamos 2 segundos
             time.sleep(2)
 
     except KeyboardInterrupt:
