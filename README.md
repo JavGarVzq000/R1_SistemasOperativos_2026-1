@@ -27,7 +27,7 @@ lenguaje posee sus bibliotecas extensas, una de ellas (y es la que usamos en est
 
 ## Uso de la biblioteca psutil
 La biblioteca psutil es una herramienta muy útil para un programador cuyo objetivo es análisis y gestión
-sobre el sistema de computo en que trabaja, pues posee funcionalidades como las siguientes
+sobre el sistema de computo en que trabaja, pues posee funcionalidades como las siguientes:
 
 - Monitorización del sistema
 - Gestión de procesos
@@ -35,9 +35,9 @@ sobre el sistema de computo en que trabaja, pues posee funcionalidades como las 
 - Uso de sensores
 
 
-Por ello, se utiliza para
+Por ello, se utiliza para:
 
-- Desarrollo de herramientas de monotorización.
+- Desarrollo de herramientas de monitorización.
 - Optimización y perfilado.
 - Automatización de tareas.
 - Desarrollo de aplicaciones de seguridad.
