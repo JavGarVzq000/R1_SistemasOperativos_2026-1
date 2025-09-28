@@ -1,6 +1,8 @@
 # =========================================================================
 # Monitoreo de Procesos del SO (Usando Python y psutil)
 # Modificación: Si uso_cpu es 0.00%, el estado debe ser 'Listo (en espera)'.
+
+#cambios 
 # =========================================================================
 
 # Solicitamos las librerías que necesitamos
