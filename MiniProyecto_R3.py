@@ -9,7 +9,7 @@ import time
 import tkinter as tk  # Librería principal para la interfaz gráfica.
 from tkinter import ttk # Usada para la tabla (Treeview) y Progressbar.
 
-# INTERFAZ: Variables globales para la GUI.
+# Variables globales para la GUI/Interfaz gráfica
 app_window = None # Ventana principal de la aplicación.
 tree_view = None    # Tabla para mostrar los procesos.
 status_label = None  # Etiqueta para mostrar la última actualización.
@@ -18,8 +18,11 @@ barra_cpu = None        # Barra de progreso de CPU.
 etiqueta_mem = None      # Etiqueta para el texto de uso de Memoria.
 barra_mem = None        # Barra de progreso de Memoria.
 
-#Definimos el mapeo de estados como una variable global (o constante)
-# Traduce los estados internos de psutil (que reflejan el SO) a un formato legible
+
+
+
+#Definimos el mapeo de estados como una variable global (o constante) para traducir los estados internod de psutil (que reflejan el SO) a un formato legible.
+
 ESTADOS_SIMULADOS = {
     'running': 'Ejecutándose',              # Proceso usando la CPU activamente.
     'sleeping': 'Listo (en espera)',       # Estado por defecto cuando el SO lo reporta como "durmiendo".
@@ -27,24 +30,18 @@ ESTADOS_SIMULADOS = {
     'zombie': 'Zombie (terminado)'          # Proceso terminado, pero que aún tiene una entrada en la tabla de procesos.
     # Nota: El estado 'Listo (en espera)' también se aplicará por lógica de CPU 0.00%
 }
-
-# INTERFAZ: Estilo personalizado para las barras de progreso
-def configurar_estilos():
-    style = ttk.Style()
     
-    # Estilo base para las barras
-    style.configure('CPU.Horizontal.TProgressbar', troughcolor='#E0E0E0', background='#2ecc71', thickness=15)
 
-    # Estilo para la barra de Memoria
-    style.configure('MEM.Horizontal.TProgressbar', troughcolor='#E0E0E0', background='#2ecc71', thickness=15)
-    
+# =========================================================================
+# Funcionalidad del Monitor de procesos
+# =========================================================================
 
 def obtener_y_mostrar_proceso(proc):
-    """ Fnción que extrae la información detallada de un proceso individual y aplica la nueva lógica de estado.
-    """
+    # Esta función extrae los datos de un proceso individual, realiza conversiones (bytes a MB)
+    # y aplica la lógica de simulación de estado para devolver una tupla lista para la GUI.
     
     try:
-        # Extracción de campos obligatorios
+        # Extracción de campos obligatorios. pid es el ID del proceso, name es el nombre del proceso.
         pid = proc.info['pid']
         nombre = proc.info['name']
         
@@ -55,7 +52,9 @@ def obtener_y_mostrar_proceso(proc):
         # MANEJO DE USO DE MEMORIA (en MB)
         mem_info = proc.info['memory_info']
         if mem_info is not None:
-            uso_memoria = mem_info.rss / (1024 * 1024) # Convertir bytes a MB debido a que rss está en bytes y se requiere convertir a MB.
+            uso_memoria = mem_info.rss / (1024 * 1024)
+        # Convertir bytes a MB debido a que rss está en bytes y se requiere convertir a MB. Resident Set Size (RSS) es la cantidad de memoria física (RAM) que un proceso está usando.
+       
         else:
             uso_memoria = 0.0
             
@@ -70,7 +69,7 @@ def obtener_y_mostrar_proceso(proc):
             estado_simulado = ESTADOS_SIMULADOS.get(estado_real, estado_real)
 
         
-        # se devuelven los datos para la inserción en la tabla.
+        # INTERFAZ: se devuelven los datos para la inserción en la tabla.
         return (
             str(pid), 
             nombre, 
@@ -86,10 +85,8 @@ def obtener_y_mostrar_proceso(proc):
 
 
 def actualizar_tabla():
-    """
-    Función principal que actualiza la tabla de procesos y las barras de progreso de acuerdo con la información de la función anterior obtener_y_mostrar_proceso.
-    Actualiza el Treeview, las barras y la hora.
-    """
+    # Función principal que actualiza la tabla de procesos y las barras de progreso de acuerdo con la información de la función anterior obtener_y_mostrar_proceso. Actualiza el Treeview, las barras y la hora.
+    
 
     global tree_view, app_window, status_label 
     global etiqueta_cpu, barra_cpu, etiqueta_mem, barra_mem
@@ -99,11 +96,12 @@ def actualizar_tabla():
     for i in tree_view.get_children():
         tree_view.delete(i)
 
-    #Iterar sobre todos los procesos activos y llenarlos mediante un ciclo for al iterar  proc de psutil en la función psutil.process_iter. 
+   
+    ## LÓGICA DE PROCESOS: Inicia la iteración sobre todos los procesos activos del sistema. proc representa cada proceso individual y se itera en la función psutil.process_iter.
     for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_info']):
         datos_proceso = obtener_y_mostrar_proceso(proc)       
         if datos_proceso:
-            # 3. Insertar los datos del proceso en la tabla
+            # Insertar los datos del proceso en la tabla
             tree_view.insert('', tk.END, values=datos_proceso)
 
     # Barras de progreso y etiquetas de CPU y Memoria
@@ -112,9 +110,10 @@ def actualizar_tabla():
     etiqueta_cpu.config(text=f"Uso de CPU: {cpu_percent:.1f}%")
     barra_cpu.config(value=cpu_percent)
 
-    # Uso de Memoria (global)
+    # Uso de Memoria (global). Obtiene el objeto de información de memoria virtual
     virtual_mem = psutil.virtual_memory()
     mem_percent = virtual_mem.percent
+    #Convierte los valores de bytes a Gigabytes (GB) para la etiqueta.
     mem_used_gb = virtual_mem.used / (1024 ** 3)
     mem_total_gb = virtual_mem.total / (1024 ** 3)
     
@@ -130,13 +129,24 @@ def actualizar_tabla():
     #Programar la siguiente actualización automática cda 2 segundos (2000 ms)
     app_window.after(2000, actualizar_tabla)
 
+# =========================================================================
+# Construcción de la interfaz gráfica 
+# =========================================================================
+
+# INTERFAZ: Estilo personalizado para las barras de progreso
+def configurar_estilos():
+    style = ttk.Style()
+    
+    # Estilo base para las barras
+    style.configure('CPU.Horizontal.TProgressbar', troughcolor='#E0E0E0', background='#2ecc71', thickness=15)
+
+    # Estilo para la barra de Memoria
+    style.configure('MEM.Horizontal.TProgressbar', troughcolor='#E0E0E0', background='#2ecc71', thickness=15)
+
 
 def monitorear_procesos():
-    """
-    Esta función configura la interfaz gráfica y comienza el monitoreo de procesos.
-   
-    INTERFAZ: Configura la ventana, estilos, barras horizontales y tabla, y luego inicia el bucle.
-    """
+    # Esta función inicializa todos los elementos gráficos de la GUI (ventana, barras de CPU/Memoria, y la tabla de procesos).
+    # Solo crea el esqueleto visual; la actualización de datos ocurre en la función 'actualizar_datos'.
     
     global app_window, tree_view, status_label
     global etiqueta_cpu, barra_cpu, etiqueta_mem, barra_mem
@@ -144,13 +154,12 @@ def monitorear_procesos():
     # Ventana Principal
     app_window = tk.Tk()
     app_window.title("Monitor de Procesos del SO")
-    # INTERFAZ: Reducimos el alto ya que las barras horizontales ocupan menos espacio vertical.
     app_window.geometry("850x550") 
 
-    # INTERFAZ: Configurar el estilo personalizado para las barras
+    # Llamada a la función que configura el estilo personalizado para las barras
     configurar_estilos()
     
-    # --- Título y Estado (Top) ---
+    # Título y Estado (Top) 
     top_frame = tk.Frame(app_window)
     top_frame.pack(pady=10, fill='x')
 
@@ -161,48 +170,48 @@ def monitorear_procesos():
     status_label.pack(side=tk.TOP, pady=(0, 5))
 
 
-    # --- INTERFAZ: Barras Horizontales Superiores ---
+    #  Barras Horizontales Superiores 
     bars_container_frame = tk.Frame(app_window)
-    # INTERFAZ: Este frame ahora ocupará todo el ancho para las barras horizontales.
+    # Este contenedor ahora ocupará todo el ancho para las barras horizontales.
     bars_container_frame.pack(fill='x', padx=15, pady=(5, 15))
 
-    # --- 1. Barra de CPU (Fila) ---
+    #  Barra de CPU 
     cpu_frame = tk.Frame(bars_container_frame)
     cpu_frame.pack(side=tk.TOP, fill='x', pady=(0, 5))
     
-    # Etiqueta de CPU (A la izquierda)
+    # Etiqueta de CPU 
     etiqueta_cpu = ttk.Label(cpu_frame, text="Uso de CPU: --.-%", width=35)
     etiqueta_cpu.pack(side=tk.LEFT, anchor='w')
     
-    # Barra de Progreso de CPU (Horizontal)
+    # Barra de Progreso de CPU 
     barra_cpu = ttk.Progressbar(cpu_frame, style='CPU.Horizontal.TProgressbar', 
                                  orient='horizontal', mode='determinate')
-    # INTERFAZ: Expand=True permite que la barra llene el espacio restante
+    # Expand=True permite que la barra llene el espacio restante
     barra_cpu.pack(side=tk.LEFT, fill='x', expand=True, padx=(10, 0)) 
 
-    # --- 2. Barra de Memoria (Fila) ---
+    #  Barra de Memoria 
     mem_frame = tk.Frame(bars_container_frame)
     mem_frame.pack(side=tk.TOP, fill='x', pady=(5, 0))
 
-    # Etiqueta de Memoria (A la izquierda)
+    # Etiqueta de Memoria 
     etiqueta_mem = ttk.Label(mem_frame, text="Uso de Memoria: --.-%", width=35)
     etiqueta_mem.pack(side=tk.LEFT, anchor='w')
     
-    # Barra de Progreso de Memoria (Horizontal)
+    # Barra de Progreso de Memoria 
     barra_mem = ttk.Progressbar(mem_frame, style='MEM.Horizontal.TProgressbar', 
                                  orient='horizontal', mode='determinate')
     barra_mem.pack(side=tk.LEFT, fill='x', expand=True, padx=(10, 0))
     
     
-    # --- Tabla de Procesos (Bottom) ---
+    # Tabla de Procesos (Bottom) 
     table_frame = tk.Frame(app_window)
     table_frame.pack(expand=True, fill='both', padx=10, pady=(0, 10))
 
-    # 2. Definición de Columnas para el Treeview (Tabla)
+    # Definición de Columnas para el Treeview (Tabla)
     columnas = ('PID', 'Proceso', 'CPU', 'Memoria', 'Estado')
     tree_view = ttk.Treeview(table_frame, columns=columnas, show='headings')
 
-    # 3. Configuración del encabezado y ancho de las columnas
+    # Configuración del encabezado y ancho de las columnas
     tree_view.heading('PID', text='PID', anchor=tk.W)
     tree_view.heading('Proceso', text='Proceso', anchor=tk.W)
     tree_view.heading('CPU', text='CPU', anchor=tk.W)
@@ -215,13 +224,13 @@ def monitorear_procesos():
     tree_view.column('Memoria', width=100, stretch=tk.NO)
     tree_view.column('Estado', width=150, stretch=tk.NO)
 
-    # INTERFAZ: Agregar Scrollbar 
+    #  Agregar Scrollbar 
     scrollbar = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=tree_view.yview)
     tree_view.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     tree_view.pack(expand=True, fill='both')
 
-    # 4. Iniciar el ciclo de actualización y el bucle principal de Tkinter
+    #  Iniciar el ciclo de actualización y el bucle principal de Tkinter
     actualizar_tabla()
     app_window.mainloop()
 
