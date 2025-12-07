@@ -1,10 +1,8 @@
 # RETO 1: Monitoreo de Procesos del SO (Usando Python y psutil)
 
 ## Integrantes del equipo:
-- Cano Barrera Paulina
 - Espinosa Guzmán Magali Lizeth
 - García Vázquez Javier Alejandro
-- Villalba Reyes David
 
 
 ## Objetivo
